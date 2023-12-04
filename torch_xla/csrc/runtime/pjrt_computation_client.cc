@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <future>
+#include <iostream>
 #include <unordered_set>
 #include <vector>
 
@@ -135,9 +136,9 @@ PjRtComputationClient::PjRtComputationClient() {
     bool async = sys_util::GetEnvBool(env::kEnvPjrtAsyncGpuClient, true);
     int local_process_rank = sys_util::GetEnvInt(env::kEnvPjRtLocalRank, 0);
     int global_process_rank = sys_util::GetEnvInt("RANK", local_process_rank);
-    // int local_world_size = sys_util::GetEnvInt("LOCAL_WORLD_SIZE", 1);
-    // int global_world_size = sys_util::GetEnvInt("WORLD_SIZE", local_world_size);
-    int global_world_size = 1;
+    int local_world_size = sys_util::GetEnvInt("LOCAL_WORLD_SIZE", 1);
+    int global_world_size = sys_util::GetEnvInt("WORLD_SIZE", local_world_size);
+    // int global_world_size = 1;
     std::string master_addr =
         runtime::sys_util::GetEnvString("MASTER_ADDR", "localhost");
     std::string port = runtime::sys_util::GetEnvString(
@@ -150,9 +151,11 @@ PjRtComputationClient::PjRtComputationClient() {
         global_process_rank, global_world_size, master_addr, port);
     std::shared_ptr<xla::DistributedRuntimeClient> distributed_client =
         coordinator_->GetClient();
-    // auto allowed_devices =
-    //     std::make_optional<std::set<int>>(std::set{local_process_rank});
     std::optional<std::set<int>> allowed_devices;
+    if (global_world_size > 1) {
+      allowed_devices =
+          std::make_optional<std::set<int>>(std::set{local_process_rank});
+    }
     xla::PjRtClient::KeyValueGetCallback kv_get = nullptr;
     xla::PjRtClient::KeyValuePutCallback kv_put = nullptr;
     if (distributed_client != nullptr) {
@@ -794,13 +797,7 @@ std::vector<std::string> PjRtComputationClient::GetLocalDevices() const {
 }
 
 std::vector<std::string> PjRtComputationClient::GetAllDevices() const {
-  std::vector<std::string> devices = PjRtDevicesToString(client_->devices());
-
-  for (std::string dev: devices) {
-    std::cout << "xw32, file=" << __FILE__ << ", line=" << __LINE__ << "function=" << __FUNCTION__ << ": dev=" << dev << std::endl;
-  }
-
-  return devices;
+  return PjRtDevicesToString(client_->devices());
 }
 
 int PjRtComputationClient::GetNumProcesses() const {
