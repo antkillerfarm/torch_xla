@@ -29,4 +29,7 @@ cc_binary(
     ] + if_cuda_is_configured([
         "@xla//xla/stream_executor:cuda_platform",
     ]),
+    data = [
+        "@xla//xla/pjrt/plugin/vsi/npu:libnpu.so",
+    ],
 )

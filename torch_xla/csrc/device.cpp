@@ -25,6 +25,8 @@ std::string XlaDeviceTypeToString(XlaDeviceType hw_type) {
       return "NEURON";
     case XlaDeviceType::SPMD:
       return "SPMD";
+    case XlaDeviceType::NPU:
+      return "NPU";
   }
   XLA_ERROR() << "Invalid device type";
 }
@@ -58,7 +60,7 @@ torch::lazy::BackendDevice ParseDeviceString(const std::string& device_spec) {
   }
   std::vector<std::string> device_spec_parts = absl::StrSplit(device_spec, ':');
   XLA_CHECK_EQ(device_spec_parts.size(), 2)
-      << "Invalid device specification: " << device_spec;
+      << "Invalid device specification 0: " << device_spec;
 
   int ordinal = std::stoi(device_spec_parts[1]);
   auto device_type = std::make_shared<DeviceType>();
@@ -80,8 +82,11 @@ torch::lazy::BackendDevice ParseDeviceString(const std::string& device_spec) {
   } else if (device_spec_parts[0] == "NEURON") {
     device_type->type = static_cast<std::underlying_type_t<XlaDeviceType>>(
         XlaDeviceType::NEURON);
+  } else if (device_spec_parts[0] == "NPU") {
+    device_type->type =
+        static_cast<std::underlying_type_t<XlaDeviceType>>(XlaDeviceType::NPU);
   } else {
-    XLA_ERROR() << "Invalid device specification: " << device_spec;
+    XLA_ERROR() << "Invalid device specification 1: " << device_spec;
   }
 
   return torch::lazy::BackendDevice(std::move(device_type), ordinal);

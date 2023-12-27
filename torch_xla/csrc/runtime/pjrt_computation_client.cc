@@ -63,7 +63,7 @@ std::unordered_map<int, int> build_index_map(
   for (int i = 0; i < devices.size(); ++i) {
     std::vector<std::string> device_spec = absl::StrSplit(devices[i], ':');
     XLA_CHECK_EQ(device_spec.size(), 2)
-        << "Invalid device specification: " << devices[i];
+        << "Invalid device specification 2: " << devices[i];
     int global_ordinal = std::stoi(device_spec[1]);
     device_index[global_ordinal] = i;
   }
@@ -95,6 +95,7 @@ std::vector<std::string> PjRtComputationClient::PjRtDevicesToString(
 
 PjRtComputationClient::PjRtComputationClient() {
   std::string device_type = sys_util::GetEnvString(env::kEnvPjRtDevice, "");
+  LOG(INFO) << "XXTT 0: " << device_type;
   if (device_type == "CPU") {
     TF_VLOG(1) << "Initializing PjRt CPU client...";
     bool async = sys_util::GetEnvBool(env::kEnvPjrtAsyncCpuClient, true);
@@ -154,6 +155,11 @@ PjRtComputationClient::PjRtComputationClient() {
         "xpu", sys_util::GetEnvString(env::kEnvXpuLibraryPath, "libxpu.so")));
     client_ = std::move(xla::GetCApiClient("XPU").value());
 
+  } else if (device_type == "NPU") {
+    TF_VLOG(1) << "Initializing PjRt NPU client...";
+    XLA_CHECK_OK(pjrt::LoadPjrtPlugin(
+        "npu", sys_util::GetEnvString(env::kEnvNpuLibraryPath, "libnpu.so")));
+    client_ = std::move(xla::GetCApiClient("NPU").value());
   } else if (device_type == "NEURON") {
     TF_VLOG(1) << "Initializing PjRt NEURON client...";
     XLA_CHECK_OK(pjrt::LoadPjrtPlugin(
@@ -389,7 +395,7 @@ ComputationClient::DataPtr PjRtComputationClient::ReplicateShardedData(
       std::vector<std::string> device_spec =
           absl::StrSplit(shard->device(), ':');
       XLA_CHECK_EQ(device_spec.size(), 2)
-          << "Invalid device specification: " << shard->device();
+          << "Invalid device specification 3: " << shard->device();
       int device_i = device_index[std::stoi(device_spec[1])];
       TF_VLOG(3) << shard->device() << " is mapped to local device index "
                  << device_i;
@@ -533,6 +539,7 @@ PjRtComputationClient::ExecuteComputation(
   tsl::profiler::TraceMe activity("PjRtComputationClient::ExecuteComputation",
                                   tsl::profiler::TraceMeLevel::kInfo);
   TF_VLOG(1) << "Executing PjRt computation on " << device;
+  // LOG(INFO) << "XXTT 1: " << tsl::CurrentStackTrace();
   const PjRtComputation& pjrt_computation =
       dynamic_cast<const PjRtComputation&>(computation);
 

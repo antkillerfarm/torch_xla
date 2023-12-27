@@ -30,25 +30,25 @@ python_configure(
 # b) get the sha256 hash of the commit by running:
 #    curl -L https://github.com/openxla/xla/archive/<git hash>.tar.gz | sha256sum
 #    and update the sha256 with the result.
-http_archive(
-    name = "xla",
-    patch_args = [
-        "-l",
-        "-p1",
-    ],
-    patch_tool = "patch",
-    patches = [
-        "//openxla_patches:cache_urls.diff",
-        "//openxla_patches:f16_abi_clang.diff",
-        "//openxla_patches:gpu_race_condition.diff",
-        "//openxla_patches:constexpr_return.diff",
-        "//openxla_patches:pjrt_api_tsl_logging.diff",
-    ],
-    strip_prefix = "xla-97a5f819faf9ff793b7ba68ff1f31f74f9459c18",
-    urls = [
-        "https://github.com/openxla/xla/archive/97a5f819faf9ff793b7ba68ff1f31f74f9459c18.tar.gz",
-    ],
-)
+# http_archive(
+#     name = "xla",
+#     patch_args = [
+#         "-l",
+#         "-p1",
+#     ],
+#     patch_tool = "patch",
+#     patches = [
+#         "//openxla_patches:cache_urls.diff",
+#         "//openxla_patches:f16_abi_clang.diff",
+#         "//openxla_patches:gpu_race_condition.diff",
+#         "//openxla_patches:constexpr_return.diff",
+#         "//openxla_patches:pjrt_api_tsl_logging.diff",
+#     ],
+#     strip_prefix = "xla-97a5f819faf9ff793b7ba68ff1f31f74f9459c18",
+#     urls = [
+#         "https://github.com/openxla/xla/archive/97a5f819faf9ff793b7ba68ff1f31f74f9459c18.tar.gz",
+#     ],
+# )
 
 # For development, one often wants to make changes to the OpenXLA repository as well
 # as the PyTorch/XLA repository. You can override the pinned repository above with a
@@ -58,10 +58,10 @@ http_archive(
 #    bazel --override_repository=xla=/path/to/openxla
 #    or
 # b) by commenting out the http_archive above and uncommenting the following:
-# local_repository(
-#    name = "xla",
-#    path = "/path/to/openxla",
-# )
+local_repository(
+    name = "xla",
+    path = "../openxla",
+)
 
 # Initialize OpenXLA's external dependencies.
 load("@xla//:workspace4.bzl", "xla_workspace4")
@@ -92,4 +92,15 @@ new_local_repository(
     name = "torch",
     build_file = "//bazel:torch.BUILD",
     path = PYTORCH_LOCAL_DIR,
+)
+
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+
+git_repository(
+    name = "TIM_VX",
+    remote = "https://github.com/VeriSilicon/TIM-VX.git",
+    branch = "main",
+    # patches = ["//tensorflow/compiler/plugin/vsi/driver:0001-patch-for-TF-XLA.patch"],
+    # patch_args = ["-p1"],
+    verbose = True,
 )

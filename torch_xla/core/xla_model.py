@@ -71,7 +71,7 @@ def is_xla_tensor(tensor):
 
 
 def parse_xla_device(device):
-  m = re.match(r'(CPU|TPU|GPU|XPU|NEURON):(\d+)$', device)
+  m = re.match(r'(CPU|TPU|GPU|XPU|NEURON|NPU):(\d+)$', device)
   if m:
     return (m.group(1), int(m.group(2)))
 
@@ -89,7 +89,7 @@ def get_xla_supported_devices(devkind=None, max_devices=None):
     The list of device strings.
   """
   xla_devices = _DEVICES.value
-  devkind = [devkind] if devkind else ['TPU', 'GPU', 'XPU', 'NEURON', 'CPU']
+  devkind = [devkind] if devkind else ['TPU', 'GPU', 'XPU', 'NEURON', 'CPU', 'NPU']
   for kind in devkind:
     kind_devices = []
     for i, device in enumerate(xla_devices):
@@ -268,7 +268,9 @@ def unlazy(tensors):
 
 def set_replication(device, devices):
   device = str(device)
+  print("xxtt: " + device)
   devctx = _get_device_context(device=device)
+  print(devices)
   devices = [str(x) for x in devices]
   if devices:
     replication_devices = xla_replication_devices(devices)
